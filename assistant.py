@@ -38,7 +38,7 @@ if "assistant" not in st.session_state:
         st.secrets["OPENAI_ASSISTANT"]
     )
 
-    # Create a new thread for this session
+    # Create a new  for this session
     st.session_state.thread = client.beta.threads.create(
         metadata={
             "session_id": st.session_state.session_id,
@@ -69,7 +69,7 @@ if prompt := st.chat_input("How can I help you?"):
 
     # Add message to the thread
     st.session_state.messages = client.beta.threads.messages.create(
-        thread_id=st.session_state.thread.id, role="user", content=prompt
+        thread_id=st.session_state.thread.id, role="user", content=f" Use the provided documents as context to answer this question: {prompt}"
     )
 
     # Do a run to process the messages in the thread
