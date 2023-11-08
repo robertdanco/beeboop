@@ -6,7 +6,7 @@ import time
 
 from openai import OpenAI
 
-client = OpenAI(api_key="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")
+client = OpenAI()
 
 MODEL = "gpt-4-1106-preview"
 
