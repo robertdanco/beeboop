@@ -133,4 +133,4 @@ if prompt := st.chat_input("How can I help you?"):
 #         )
 #         if st.session_state.retry_error < 3:
 #             time.sleep(3)
-            st.rerun()
+#            st.rerun()
