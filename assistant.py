@@ -67,50 +67,70 @@ if prompt := st.chat_input("How can I help you?"):
     with st.chat_message("user"):
         st.write(prompt)
 
-    # Add message to the thread
-    st.session_state.messages = client.beta.threads.messages.create(
-        thread_id=st.session_state.thread.id, role="user", content=f" Use the provided documents as context to answer this question: {prompt}"
-    )
+    # 20240103 start -- New lines to start a chat completion with streaming
+    try:
+        chat_stream = openai.ChatCompletion.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            stream=True,
+        )
+        # New lines to process stream responses
+        for message in chat_stream:
+            if message.get('role') == 'assistant':
+                with st.chat_message("assistant"):
+                    st.write(message.get('content'))
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+    # 20240103 end
 
-    # Do a run to process the messages in the thread
-    st.session_state.run = client.beta.threads.runs.create(
-        thread_id=st.session_state.thread.id,
-        assistant_id=st.session_state.assistant.id,
-    )
+    
+    # # Add message to the thread
+    # st.session_state.messages = client.beta.threads.messages.create(
+    #     thread_id=st.session_state.thread.id, role="user", content=f" Use the provided documents as context to answer this question: {prompt}"
+    # )
+
+    # # Do a run to process the messages in the thread
+    # st.session_state.run = client.beta.threads.runs.create(
+    #     thread_id=st.session_state.thread.id,
+    #     assistant_id=st.session_state.assistant.id,
+    # )
     if st.session_state.retry_error < 3:
         time.sleep(1)  # Wait 1 second before checking run status
         st.rerun()
 
-# Check if 'run' object has 'status' attribute
-if hasattr(st.session_state.run, "status"):
-    # Handle the 'running' status
-    if st.session_state.run.status == "running":
-        with st.chat_message("assistant"):
-            st.write("Thinking ......")
-        if st.session_state.retry_error < 3:
-            time.sleep(1)  # Short delay to prevent immediate rerun, adjust as needed
-            st.rerun()
+## Check if 'run' object has 'status' attribute
+# if hasattr(st.session_state.run, "status"):
+#     # Handle the 'running' status
+#     if st.session_state.run.status == "running":
+#         with st.chat_message("assistant"):
+#             st.write("Thinking ......")
+#         if st.session_state.retry_error < 3:
+#             time.sleep(1)  # Short delay to prevent immediate rerun, adjust as needed
+#             st.rerun()
 
-    # Handle the 'failed' status
-    elif st.session_state.run.status == "failed":
-        st.session_state.retry_error += 1
-        with st.chat_message("assistant"):
-            if st.session_state.retry_error < 3:
-                st.write("Run failed, retrying ......")
-                time.sleep(3)  # Longer delay before retrying
-                st.rerun()
-            else:
-                st.error(
-                    "FAILED: The OpenAI API is currently processing too many requests. Please try again later ......"
-                )
+#     # Handle the 'failed' status
+#     elif st.session_state.run.status == "failed":
+#         st.session_state.retry_error += 1
+#         with st.chat_message("assistant"):
+#             if st.session_state.retry_error < 3:
+#                 st.write("Run failed, retrying ......")
+#                 time.sleep(3)  # Longer delay before retrying
+#                 st.rerun()
+#             else:
+#                 st.error(
+#                     "FAILED: The OpenAI API is currently processing too many requests. Please try again later ......"
+#                 )
 
-    # Handle any status that is not 'completed'
-    elif st.session_state.run.status != "completed":
-        # Attempt to retrieve the run again, possibly redundant if there's no other status but 'running' or 'failed'
-        st.session_state.run = client.beta.threads.runs.retrieve(
-            thread_id=st.session_state.thread.id,
-            run_id=st.session_state.run.id,
-        )
-        if st.session_state.retry_error < 3:
-            time.sleep(3)
+#     # Handle any status that is not 'completed'
+#     elif st.session_state.run.status != "completed":
+#         # Attempt to retrieve the run again, possibly redundant if there's no other status but 'running' or 'failed'
+#         st.session_state.run = client.beta.threads.runs.retrieve(
+#             thread_id=st.session_state.thread.id,
+#             run_id=st.session_state.run.id,
+#         )
+#         if st.session_state.retry_error < 3:
+#             time.sleep(3)
             st.rerun()
