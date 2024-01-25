@@ -1,4 +1,5 @@
 streamlit
 openai
-llama-index
-nltk
+uuid
+time
+backoff
