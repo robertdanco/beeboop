@@ -63,7 +63,7 @@ st.sidebar.markdown("Using gpt-4-1106-preview API")
 st.sidebar.markdown(st.session_state.session_id)
 st.sidebar.divider()
 
-client = OpenAI()
+client = openai.OpenAI()
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Handling OpenAI assistant and thread creation
