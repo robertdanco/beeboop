@@ -29,27 +29,28 @@ def display_messages(messages):
 # Function for checking run status with exponential backoff
 @backoff.on_exception(backoff.expo, Exception, max_tries=3)
 def check_run_status():
-    if 'status' in st.session_state.run and st.session_state.run['status'] == "running":
-        with st.chat_message("assistant"):
-            st.write("Thinking ......")
-        time.sleep(1)
-        st.rerun()
-    elif 'status' in st.session_state.run and st.session_state.run['status'] == "failed":
-        st.session_state.retry_error += 1
-        with st.chat_message("assistant"):
-            if st.session_state.retry_error < 3:
-                st.write("Run failed, retrying ......")
-                time.sleep(3)
-                st.rerun()
-            else:
-                st.error("FAILED: The OpenAI API is currently processing too many requests. Please try again later ......")
-    elif 'status' in st.session_state.run and st.session_state.run['status'] != "completed":
-        st.session_state.run = client.beta.threads.runs.retrieve(
-            thread_id=st.session_state.thread.id,
-            run_id=st.session_state.run['id'],
-        )
-        time.sleep(3)
-        st.rerun()
+    if st.session_state.thread is None:
+        if 'status' in st.session_state.run and st.session_state.run['status'] == "running":
+            with st.chat_message("assistant"):
+                st.write("Thinking ......")
+            time.sleep(1)
+            st.rerun()
+        elif 'status' in st.session_state.run and st.session_state.run['status'] == "failed":
+            st.session_state.retry_error += 1
+            with st.chat_message("assistant"):
+                if st.session_state.retry_error < 3:
+                    st.write("Run failed, retrying ......")
+                    time.sleep(3)
+                    st.rerun()
+                else:
+                    st.error("FAILED: The OpenAI API is currently processing too many requests. Please try again later ......")
+        elif 'status' in st.session_state.run and st.session_state.run['status'] != "completed":
+            st.session_state.run = client.beta.threads.runs.retrieve(
+                thread_id=st.session_state.thread.id,
+                run_id=st.session_state.run['id'],
+            )
+            time.sleep(3)
+            st.rerun()
 
 # Initialize session state variables
 initialize_session_state()
